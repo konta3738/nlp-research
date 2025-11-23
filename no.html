@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <title>TRepLiNa: Forbedring av maskinoversettelse for lavressursspråk med CKA + REPINA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.7;
+      margin: 0;
+      padding: 0;
+      background: #f7f7fb;
+      color: #222;
+    }
+    header {
+      background: #1b2430;
+      color: #fff;
+      padding: 1.5rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+    }
+    .lang-switch {
+      margin-right: 1rem;
+    }
+    .lang-switch a {
+      background: #fff;
+      color: #1b2430;
+      padding: 6px 14px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+    .lang-switch a:hover {
+      background: #dce0ff;
+    }
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 3rem;
+      background: #fff;
+    }
+    h2, h3, h4 {
+      margin-top: 2rem;
+      color: #1b2430;
+    }
+    h2 {
+      border-bottom: 2px solid #e0e0f0;
+      padding-bottom: 0.3rem;
+    }
+    a {
+      color: #0066cc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .paper-info {
+      background: #f0f2ff;
+      border-left: 4px solid #4c6fff;
+      padding: 0.8rem 1rem;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+    .math-note {
+      font-size: 0.9rem;
+      color: #555;
+      background: #fafafa;
+      border-left: 3px solid #ccc;
+      padding: 0.6rem 0.8rem;
+      margin-top: 0.5rem;
+    }
+    pre {
+      background: #0f172a;
+      color: #e5e7eb;
+      padding: 1rem;
+      overflow-x: auto;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+  </style>
+
+  <!-- MathJax -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["\\(", "\\)"], ["$", "$"]],
+        displayMath: [["\\[", "\\]"], ["$$", "$$"]]
+      }
+    };
+  </script>
+  <script async id="MathJax-script"
+          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+  <header>
+    <div>
+      <h1>TRepLiNa: forbedrer maskinoversettelse for lavressursspråk med CKA + REPINA-alignment</h1>
+      <p>Finjustering av Aya-23 8B for lavressursspråk basert på lagvis representasjons­alignering</p>
+    </div>
+
+    <!-- Språkvelger -->
+    <div class="lang-switch">
+      <a href="zh.html">中文</a>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <div class="paper-info">
+        <span class="tag">Artikkel</span>
+        <strong>TRepLiNa: Layer-wise CKA+REPINA Alignment Improves Low-Resource Machine Translation in Aya-23 8B</strong><br />
+        arXiv: <a href="https://arxiv.org/abs/2510.06249" target="_blank" rel="noopener noreferrer">
+          https://arxiv.org/abs/2510.06249
+        </a><br />
+        Publikasjonsår: 2025
+      </div>
+
+      <p>
+        På denne siden vil jeg forklare TRepLiNa-artikkelen. Dette arbeidet foreslår en metode
+        som utnytter innsikt fra
+        <strong>mechanistic interpretability (mekanistisk forklarbarhet)</strong> – et forskningsfelt
+        som analyserer interne representasjoner og nevronaktivitet i språkmodeller – og anvender
+        disse innsiktene for å forbedre maskinoversettelse for lavressursspråk.
+      </p>
+
+      <p>
+        Forskning på mechanistic interpretability antyder blant annet at mange store språkmodeller,
+        selv om de tar imot mange forskjellige språk som input, internt først projiserer inputen inn
+        i et representasjonsrom som ligner sterkt på engelsk, og så viderebehandler den derfra.
+        Mer uformelt kan vi si at
+        <strong>«språkmodellen tenker på engelsk på innsiden»</strong>.
+      </p>
+
+      <p>
+        Når modellen skal lære et lavressursspråk som den nesten ikke har sett før, er veiene
+        fra dette språket til de «interne representasjonene der modellen tenker på engelsk»
+        ennå ikke godt etablert. TRepLiNa fokuserer nettopp på dette punktet og inkluderer
+        <strong>representasjonslikheten mellom et nylig introdusert språk og et høyressursspråk
+        (her hovedsakelig engelsk)</strong>
+        i tapsfunksjonen, med mål om å strukturere de interne «engelsk-tenke»-banene bedre.
+      </p>
+
+      <p>
+        Resultatene viser at modellen i oversettelsesoppgaver for lavressursspråk i flere tilfeller
+        oppnår høyere BLEU- og chrF++-score enn med vanlig finjustering
+        (selve effekten avhenger imidlertid også av faktorer som typologisk likhet mellom språkene).
+      </p>
+
+      <p>
+        I artikkelen ligger hovedfokus på oversettelse i retningen
+        <strong>lavressursspråk → høyressursspråk</strong> (f.eks. LRL → engelsk),
+        men de eksperimentelle resultatene antyder også positive effekter i retningen
+        <strong>høyressursspråk → lavressursspråk</strong>.
+      </p>
+    </section>
+
+    <!-- Mekanisme -->
+    <section>
+      <h2>Oversikt over metoden</h2>
+      <p>
+        I TRepLiNa styres
+        <strong>likheten mellom interne representasjoner</strong>
+        for lav- og høyressursspråk ved hjelp av en tapsfunksjon som kombinerer to teknikker:
+      </p>
+      <ul>
+        <li><strong>REPINA</strong>: en regularisering som begrenser representasjonsdrift mellom basismodellen og det finjusterte modellet</li>
+        <li><strong>CKA (Centered Kernel Alignment)</strong>: et mål på hvor like representasjonsrommene til to ulike språk er</li>
+      </ul>
+
+      <!-- REPINA -->
+      <h3>Hvordan REPINA fungerer</h3>
+      <p>
+        REPINA ble opprinnelig foreslått som en
+        <strong>representasjonsbevarende regularisering</strong>
+        som kontrollerer «i hvilken grad representasjonene etter finjustering avviker
+        fra representasjonene til basismodellen».
+      </p>
+
+      <h4>Generelt bilde (REPINA med lineær projeksjon)</h4>
+      <p>
+        For token \(i\) i lag \(\ell\) definerer vi:
+      </p>
+      <ul>
+        <li>\(h_{\ell,i}^{(0)}\): skjult tilstand i basismodellen (før finjustering)</li>
+        <li>\(h_{\ell,i}^{(\theta)}\): skjult tilstand etter finjustering (med parametere \(\theta\))</li>
+      </ul>
+      <p>
+        REPINA antar at det finnes en lineær avbildning \(W\) mellom representasjonsrommet
+        til basismodellen og representasjonsrommet til det finjusterte modellet, og lærer
+        \(W\) slik at \(W h_{\ell,i}^{(\theta)}\) ligger så nær som mulig
+        \(h_{\ell,i}^{(0)}\).
+      </p>
+
+      <p>
+        REPINA-tapet kan da typisk skrives som:
+      </p>
+      <p class="math-note">
+        \[
+          \mathcal{L}_{\mathrm{REPINA}}
+          = \frac{1}{N}
+            \sum_{i=1}^{N}
+              \left\lVert
+                W h_{\ell,i}^{(\theta)} - h_{\ell,i}^{(0)}
+              \right\rVert_2^2
+        \]
+      </p>
+
+      <h4>REPINA<sup>I</sup> i denne implementasjonen (identitetsprojeksjon)</h4>
+      <p>
+        I TRepLiNa-implementasjonen brukes en enklere variant,
+        <strong>REPINA<sup>I</sup> (identity projection)</strong>,
+        der man setter \(W = I\) (identitetsmatrisen). Da blir tapsfunksjonen:
+      </p>
+      <p class="math-note">
+        \[
+          \mathcal{L}_{\mathrm{REPINA}^{I}}
+          = \frac{1}{N}
+            \sum_{i=1}^{N}
+              \left\lVert
+                h_{\ell,i}^{(\theta)} - h_{\ell,i}^{(0)}
+              \right\rVert_2^2
+        \]
+      </p>
+      <p>
+        Med andre ord pålegges en L2-straff slik at
+        <strong>representasjonene som er oppnådd etter finjustering med f.eks. LoRA</strong>
+        ikke driver for langt bort fra
+        <strong>representasjonene til basis-Aya-23 med adapterne deaktivert</strong>.
+      </p>
+
+      <!-- CKA -->
+      <h3>Hvordan CKA fungerer</h3>
+      <p>
+        CKA (Centered Kernel Alignment) er et mål på
+        <strong>hvor like to representasjonsmatriser er i «form» eller «struktur»</strong>.
+        Spesielt er lineær CKA en relativt enkel og håndterbar variant som ble foreslått
+        av Kornblith et al. (2019).
+      </p>
+
+      <h4>Definisjon av lineær CKA</h4>
+      <p>
+        La representasjonene av tokenene i et gitt lag være
+        \(X \in \mathbb{R}^{N \times D}\) og
+        \(Y \in \mathbb{R}^{N \times D}\), der \(N\) er antall token og \(D\) er
+        dimensjonen til den skjulte representasjonen. Ved å trekke fra gjennomsnittet
+        langs raderetningen (over eksemplene), får vi de sentrerte matrisene
+        \(\tilde{X}\) og \(\tilde{Y}\):
+      </p>
+      <p class="math-note">
+        \[
+          \mathrm{CKA}(X, Y)
+          =
+          \frac{
+            \left\lVert \tilde{X}^\top \tilde{Y} \right\rVert_F^2
+          }{
+            \left\lVert \tilde{X}^\top \tilde{X} \right\rVert_F
+            \cdot
+            \left\lVert \tilde{Y}^\top \tilde{Y} \right\rVert_F
+          }
+        \]
+      </p>
+      <p>
+        Her betegner \(\lVert \cdot \rVert_F\) Frobeniusnormen.
+        Verdien er normalisert slik at \(0 \leq \mathrm{CKA} \leq 1\), der
+        <strong>verdier nær 1 betyr at de to representasjonsrommene ligner sterkt</strong>.
+      </p>
+
+      <p>
+        I TRepLiNa settes representasjonsmatrisen for lavressursspråket til \(X\)
+        og representasjonsmatrisen for høyressursspråket (pivotspråket) til \(Y\),
+        og CKA beregnes. Siden vi ønsker at
+        <strong>«representasjonene for de to språkene skal ligne»</strong>,
+        minimerer vi \(1 - \mathrm{CKA}(X,Y)\) som tap:
+      </p>
+      <p class="math-note">
+        \[
+          \mathcal{L}_{\mathrm{CKA}} = 1 - \mathrm{CKA}(X, Y)
+        \]
+      </p>
+      <p>
+        Det finnes imidlertid en risiko: CKA kan skyve de interne representasjonene til
+        høyressursspråket i retning av de ennå lite organiserte representasjonene til
+        lavressursspråket, og dermed skade de allerede etablerte interne banene i modellen.
+        I artikkelen rapporteres det at CKA blir mer effektiv når det brukes sammen med REPINA,
+        fordi REPINA beskytter basismodellens representasjoner og stabiliserer den interne strukturen.
+      </p>
+    </section>
+
+    <!-- Implementasjonsdetaljer -->
+    <section>
+      <h2>Implementasjonsdetaljer (CKA / REPINA / total tapsfunksjon)</h2>
+
+      <p>
+        Hele koden er tilgjengelig på GitHub:
+        <a href="https://github.com/konta3738/cka-repina-aya23" target="_blank" rel="noopener noreferrer">
+          https://github.com/konta3738/cka-repina-aya23
+        </a><br />
+        Her trekker vi kun ut og forklarer de delene som direkte angår
+        <strong>CKA-delen, REPINA-delen og den totale tapsfunksjonen</strong>,
+        basert på koden du har delt.
+      </p>
+
+      <!-- CKA-implementasjon -->
+      <h3>1. Implementasjon av CKA</h3>
+
+      <pre><code>def center_rows(x: torch.Tensor, mask: Optional[torch.Tensor] = None) -&gt; torch.Tensor:
+    """
+    Center features along the sample dimension (rows).
+
+    x: [N, D]
+    mask: [N] boolean or float mask (1 for keep). If provided, compute mean over masked rows.
+    """
+    if mask is None:
+        mean = x.mean(dim=0, keepdim=True)
+        return x - mean
+    else:
+        if mask.dtype != torch.float32:
+            mask = mask.float()
+        # avoid division by zero
+        denom = mask.sum().clamp(min=1.0)
+        mean = (x * mask.unsqueeze(1)).sum(dim=0, keepdim=True) / denom
+        return x - mean
+
+def linear_cka(x: torch.Tensor, y: torch.Tensor,
+               x_mask: Optional[torch.Tensor] = None,
+               y_mask: Optional[torch.Tensor] = None,
+               eps: float = 1e-6) -&gt; torch.Tensor:
+    """
+    Compute linear CKA between two representation matrices.
+
+    x: [N, D]
+    y: [M, D]  (we'll downsample/upsample to min(N,M) by truncation to align tokens if not equal)
+    masks: optional [N] and [M] masks
+    """
+    # If different number of rows (tokens), align by truncation to min length.
+    n = x.shape[0]
+    m = y.shape[0]
+    L = min(n, m)
+    x = x[:L]
+    y = y[:L]
+    if x_mask is not None:
+        x_mask = x_mask[:L]
+    if y_mask is not None:
+        y_mask = y_mask[:L]
+
+    # Center rows
+    x = center_rows(x, x_mask)
+    y = center_rows(y, y_mask)
+
+    # Following Kornblith et al. (2019): CKA = ||X^T Y||_F^2 / (||X^T X||_F * ||Y^T Y||_F)
+    # where X, Y are row-centered.
+    xty = x.T @ y
+    num = (xty * xty).sum()
+
+    xtx = x.T @ x
+    yty = y.T @ y
+    denom = torch.sqrt((xtx * xtx).sum().clamp(min=eps)) * \
+            torch.sqrt((yty * yty).sum().clamp(min=eps))
+    return (num / denom).clamp(min=0.0, max=1.0)</code></pre>
+
+      <!-- REPINA-implementasjon -->
+      <h3>2. Implementasjon av REPINA<sup>I</sup></h3>
+
+      <pre><code># 3) REPINA^I (identity projection): L2 between base (adapters disabled)
+# and current reps, same inputs as a_align
+do_repina = ((global_step + 1) % 2 == 0)  # every 2 steps
+if do_repina:
+    with torch.no_grad():
+        with model.disable_adapter():
+            base_out = forward_hidden(model, a_ids, a_attn)
+
+    base_reps_all, _ = gather_layer_hidden(base_out.hidden_states, layer_index, a_attn)
+    rep_cur = a_reps_all[a_src_keep]
+    rep_pre = base_reps_all[a_src_keep]
+    if rep_cur.shape[0] != rep_pre.shape[0]:
+        L = min(rep_cur.shape[0], rep_pre.shape[0])
+        rep_cur = rep_cur[:L]
+        rep_pre = rep_pre[:L]
+
+    repina_loss = torch.mean((rep_cur - rep_pre) ** 2)</code></pre>
+
+      <!-- Total tapsfunksjon -->
+      <h3>3. Total tapsfunksjon</h3>
+
+      <pre><code>def compute_losses(
+    model,
+    batch: Dict[str, torch.Tensor],
+    tokenizer,
+    layer_index: int,
+    lambda_cka: float,
+    mu_repina: float,
+    bf16: bool,
+    global_step
+):
+    """
+    Returns (total_loss, dict of components)
+    """
+    device = next(model.parameters()).device
+    repina_loss = torch.tensor(0.0, device=device)
+
+    # 1) Task loss: LM on prompt+target (labels already mask prompt with -100)
+    input_ids = batch["input_ids"].to(device)
+    labels    = batch["labels"].to(device)
+    attention_mask = (input_ids != tokenizer.pad_token_id).to(device)
+
+    outputs = model(
+        input_ids=input_ids,
+        attention_mask=attention_mask,
+        labels=labels,
+        use_cache=False,
+        output_hidden_states=True
+    )
+    task_loss = compute_task_loss_with_label_smoothing(
+        outputs, labels, epsilon=0.1, ignore_index=-100
+    )
+
+    # 2) Alignment loss (CKA) on source regions of A and B
+    a_ids = batch["a_align_ids"].to(device)
+    b_ids = batch["b_align_ids"].to(device)
+
+    a_attn = (a_ids != tokenizer.pad_token_id).to(device)
+    b_attn = (b_ids != tokenizer.pad_token_id).to(device)
+
+    a_out = forward_hidden(model, a_ids, a_attn)
+    b_out = forward_hidden(model, b_ids, b_attn)
+
+    a_reps_all, a_tokmask_all = gather_layer_hidden(a_out.hidden_states, layer_index, a_attn)
+    b_reps_all, b_tokmask_all = gather_layer_hidden(b_out.hidden_states, layer_index, b_attn)
+
+    a_src_keep = a_attn.reshape(-1).bool()
+    b_src_keep = b_attn.reshape(-1).bool()
+
+    a_src = a_reps_all[a_src_keep]
+    b_src = b_reps_all[b_src_keep]
+
+    if a_src.numel() == 0:
+        a_src = a_reps_all[a_tokmask_all]
+    if b_src.numel() == 0:
+        b_src = b_reps_all[b_tokmask_all]
+
+    cka_val = linear_cka(a_src, b_src, None, None)
+    cka_loss = 1.0 - cka_val
+
+    # 3) REPINA^I
+    do_repina = ((global_step + 1) % 2 == 0)
+    if do_repina:
+        with torch.no_grad():
+            with model.disable_adapter():
+                base_out = forward_hidden(model, a_ids, a_attn)
+        base_reps_all, _ = gather_layer_hidden(base_out.hidden_states, layer_index, a_attn)
+        rep_cur = a_reps_all[a_src_keep]
+        rep_pre = base_reps_all[a_src_keep]
+        if rep_cur.shape[0] != rep_pre.shape[0]:
+            L = min(rep_cur.shape[0], rep_pre.shape[0])
+            rep_cur = rep_cur[:L]
+            rep_pre = rep_pre[:L]
+
+        repina_loss = torch.mean((rep_cur - rep_pre) ** 2)
+
+        total = task_loss + lambda_cka * cka_loss + mu_repina * repina_loss
+    else:
+        total = task_loss + lambda_cka * cka_loss
+
+    return total, {
+        "task_loss": task_loss.detach().float().item(),
+        "cka": cka_val.detach().float().item(),
+        "cka_loss": cka_loss.detach().float().item(),
+        "repina": repina_loss.detach().float().item(),
+        "total": total.detach().float().item()
+    }</code></pre>
+
+      <h4>Oppsummering i ligningsform</h4>
+      <p class="math-note">
+        Hvis vi betegner oppgavetapet med \(\mathcal{L}_{\mathrm{task}}\),
+        CKA-tapet med \(\mathcal{L}_{\mathrm{CKA}} = 1 - \mathrm{CKA}(X,Y)\),
+        og REPINA<sup>I</sup>-tapet med
+        \(\mathcal{L}_{\mathrm{REPINA}^{I}}\), kan den totale tapsfunksjonen skrives som
+        \[
+          \mathcal{L}_{\mathrm{total}}
+          =
+          \mathcal{L}_{\mathrm{task}}
+          + \lambda_{\mathrm{CKA}} \cdot \mathcal{L}_{\mathrm{CKA}}
+          + \mu_{\mathrm{REPINA}} \cdot \mathcal{L}_{\mathrm{REPINA}^{I}}
+        \]
+        (i implementasjonen legges REPINA-delen bare til med visse mellomrom, for eksempel annenhver treningssteg).
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    TRepLiNa / CKA + REPINA-tuning – forklaringsside (HTML-versjon)
+  </footer>
+</body>
+</html>
