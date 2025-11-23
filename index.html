@@ -5,7 +5,6 @@
   <title>TRepLiNa: CKA + REPINA による低資源機械翻訳の改善</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- 簡単なスタイル -->
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -19,15 +18,28 @@
       background: #1b2430;
       color: #fff;
       padding: 1.5rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     header h1 {
       margin: 0;
       font-size: 1.8rem;
     }
-    header p {
-      margin: 0.2rem 0 0;
+    .lang-switch {
+      margin-right: 1rem;
+    }
+    .lang-switch a {
+      background: #fff;
+      color: #1b2430;
+      padding: 6px 14px;
+      border-radius: 8px;
+      text-decoration: none;
       font-size: 0.9rem;
-      opacity: 0.8;
+      font-weight: bold;
+    }
+    .lang-switch a:hover {
+      background: #dce0ff;
     }
     main {
       max-width: 900px;
@@ -73,28 +85,9 @@
       border-radius: 6px;
       font-size: 0.85rem;
     }
-    code {
-      font-family: "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    }
-    .tag {
-      display: inline-block;
-      background: #edf2ff;
-      color: #364fc7;
-      border-radius: 999px;
-      padding: 0.1rem 0.6rem;
-      font-size: 0.75rem;
-      margin-right: 0.4rem;
-    }
-    footer {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 1rem;
-      font-size: 0.8rem;
-      color: #666;
-    }
   </style>
 
-  <!-- MathJax（数式用） -->
+  <!-- MathJax -->
   <script>
     window.MathJax = {
       tex: {
@@ -103,14 +96,21 @@
       }
     };
   </script>
-  <script id="MathJax-script" async
-          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
-  </script>
+  <script async id="MathJax-script"
+          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
+
 <body>
   <header>
-    <h1>TRepLiNa: CKA + REPINA Alignment で低資源機械翻訳を改善する</h1>
-    <p>Layer-wise 表現アライメントに基づく Aya-23 8B の低資源言語チューニング</p>
+    <div>
+      <h1>TRepLiNa: CKA + REPINA Alignment で低資源機械翻訳を改善する</h1>
+      <p>Layer-wise 表現アライメントに基づく Aya-23 8B の低資源言語チューニング</p>
+    </div>
+
+    <!-- 言語スイッチ -->
+    <div class="lang-switch">
+      <a href="zh.html">中文</a>
+    </div>
   </header>
 
   <main>
