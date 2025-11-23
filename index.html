@@ -279,6 +279,9 @@
           \mathcal{L}_{\mathrm{CKA}} = 1 - \mathrm{CKA}(X, Y)
         \]
       </p>
+      <p>
+        ただし、CKAは、元々の高資源言語の内部表現をまだうまく道が整えられていない低資源言語の内部表現に近づけてしまい、モデルの内部の道を破壊してしまう可能性があるのでREPINAと併せて使うことでより効果を発揮することが論文にて報告されています。
+      </p>
     </section>
 
     <!-- 実装の詳細 -->
@@ -481,8 +484,7 @@ if do_repina:
   </main>
 
   <footer>
-    TRepLiNa / CKA + REPINA チューニング 解説ページ（HTML版）<br />
-    ※このページは研究紹介用の静的サイトとして GitHub Pages などでそのまま利用できます。
+    TRepLiNa / CKA + REPINA チューニング 解説ページ（HTML版）
   </footer>
 </body>
 </html>
