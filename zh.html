@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>TRepLiNa：通过 CKA + REPINA 提升低资源机器翻译性能</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.7;
+      margin: 0;
+      padding: 0;
+      background: #f7f7fb;
+      color: #222;
+    }
+    header {
+      background: #1b2430;
+      color: #fff;
+      padding: 1.5rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+    }
+    .lang-switch a {
+      background: #fff;
+      color: #1b2430;
+      padding: 6px 14px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+    .lang-switch a:hover {
+      background: #dce0ff;
+    }
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 3rem;
+      background: #fff;
+    }
+    .paper-info {
+      background: #f0f2ff;
+      border-left: 4px solid #4c6fff;
+      padding: 0.8rem 1rem;
+      margin: 1rem 0;
+    }
+    .math-note {
+      font-size: 0.9rem;
+      color: #555;
+      background: #fafafa;
+      border-left: 3px solid #ccc;
+      padding: 0.6rem 0.8rem;
+      margin-top: 0.5rem;
+    }
+    pre {
+      background: #0f172a;
+      color: #e5e7eb;
+      padding: 1rem;
+      overflow-x: auto;
+      border-radius: 6px;
+    }
+  </style>
+
+  <!-- MathJax -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["\\(", "\\)"], ["$", "$"]],
+        displayMath: [["\\[", "\\]"], ["$$", "$$"]]
+      }
+    };
+  </script>
+  <script async
+          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+  <header>
+    <div>
+      <h1>TRepLiNa：通过 CKA + REPINA 提升低资源机器翻译性能</h1>
+      <p>基于 Aya-23 8B 的层级表示对齐方法</p>
+    </div>
+
+    <!-- 语言切换按钮 -->
+    <div class="lang-switch">
+      <a href="index.html">日本語</a>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <div class="paper-info">
+        <span class="tag">论文</span>
+        <strong>TRepLiNa: Layer-wise CKA+REPINA Alignment Improves Low-Resource Machine Translation in Aya-23 8B</strong><br />
+        arXiv: <a href="https://arxiv.org/abs/2510.06249" target="_blank">https://arxiv.org/abs/2510.06249</a><br />
+        发表年份：2025年
+      </div>
+
+      <p>
+        本页面介绍论文 TRepLiNa。该研究利用
+        <strong>可解释性（mechanistic interpretability）</strong> 的分析结果，
+        提出了一个能够明显提高低资源机器翻译性能的训练算法。
+      </p>
+
+      <p>
+        近年来的可解释性研究揭示，大多数大型语言模型在处理不同语言时，
+        内部会先将输入映射到<strong>类似英语的表示空间</strong>，然后再进行推理。
+        换句话说，模型内部“在用英语思考”。
+      </p>
+
+      <p>
+        对于模型几乎从未见过的低资源语言，由于缺乏通往“英语表示”的内部路径，
+        翻译表现往往不佳。TRepLiNa 通过加入
+        <strong>低资源语言与高资源语言（如英语）之间的表示相似度损失</strong>，
+        帮助模型构建这一内部路径。
+      </p>
+
+      <p>
+        实验表明，在低资源→高资源方向的翻译任务中，
+        该方法通常优于普通微调，在某些高→低方向也表现出潜力。
+      </p>
+    </section>
+
+    <!-- 机制（REPINA、CKA） -->
+    <section>
+      <h2>方法原理</h2>
+
+      <h3>1. REPINA 的工作原理</h3>
+      <p>
+        REPINA 是一种“表示保持正则项”，用于抑制微调后模型与原模型内部表示之间的偏移。
+      </p>
+      <p class="math-note">
+        一般形式：  
+        \[
+        \mathcal{L}_{REPINA}
+          = \frac{1}{N} \sum_{i}
+              \left\lVert
+                W h_{\ell,i}^{(\theta)} - h_{\ell,i}^{(0)}
+              \right\rVert_2^2
+        \]
+      </p>
+
+      <p>
+        在本项目中使用的是固定为恒等映射的 REPINA<sup>I</sup>：
+      </p>
+      <p class="math-note">
+        \[
+        \mathcal{L}_{REPINA^I}
+          = \frac{1}{N} \sum_{i}
+            \left\lVert
+              h_{\ell,i}^{(\theta)} - h_{\ell,i}^{(0)}
+            \right\rVert_2^2
+        \]
+      </p>
+
+      <h3>2. CKA 的工作原理</h3>
+      <p>
+        CKA 用于衡量两种表示空间结构的相似性。线性 CKA 定义如下：
+      </p>
+      <p class="math-note">
+        \[
+        CKA(X,Y)
+        = \frac{\left\lVert \tilde{X}^\top \tilde{Y} \right\rVert_F^2}{
+                \left\lVert \tilde{X}^\top \tilde{X} \right\rVert_F
+                \cdot
+                \left\lVert \tilde{Y}^\top \tilde{Y} \right\rVert_F }
+        \]
+      </p>
+
+      <p>
+        在训练中最小化：
+      </p>
+      <p class="math-note">
+        \[
+          \mathcal{L}_{CKA} = 1 - CKA(X,Y)
+        \]
+      </p>
+
+      <p>
+        CKA 会促进低资源语言向高资源语言的内部表示靠近。
+        但如果单独使用，可能会破坏模型已有的内部路径，因此论文建议与 REPINA 同时使用。
+      </p>
+
+    </section>
+  </main>
+
+  <footer>
+    TRepLiNa / CKA + REPINA 说明页面（中文版本）
+  </footer>
+</body>
+</html>
