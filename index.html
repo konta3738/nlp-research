@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>TRepLiNa: CKA + REPINA による低資源機械翻訳の改善</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <!-- 簡単なスタイル -->
   <style>
     body {
@@ -96,10 +97,15 @@
   <!-- MathJax（数式用） -->
   <script>
     window.MathJax = {
-      tex: { inlineMath: [["\\(", "\\)"], ["$", "$"]] }
+      tex: {
+        inlineMath: [["\\(", "\\)"], ["$", "$"]],
+        displayMath: [["\\[", "\\]"], ["$$", "$$"]]
+      }
     };
   </script>
-  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script id="MathJax-script" async
+          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
 </head>
 <body>
   <header>
@@ -178,47 +184,47 @@
 
       <h4>一般的なイメージ（線形射影ありの REPINA）</h4>
       <p>
-        ある層 \\(\ell\\) のトークン \\(i\\) に対して、
-        <ul>
-          <li>\\(h_{\ell,i}^{(0)}\\): 微調整前（ベース）の隠れ状態</li>
-          <li>\\(h_{\ell,i}^{(\theta)}\\): 微調整後（パラメータ \\(\\theta\\)）の隠れ状態</li>
-        </ul>
+        ある層 \(\ell\) のトークン \(i\) に対して、
+      </p>
+      <ul>
+        <li>\(h_{\ell,i}^{(0)}\): 微調整前（ベース）の隠れ状態</li>
+        <li>\(h_{\ell,i}^{(\theta)}\): 微調整後（パラメータ \(\theta\)）の隠れ状態</li>
+      </ul>
+      <p>
         とします。REPINA では、ベースの表現空間と微調整後の表現空間のあいだに
-        線形写像 \\(W\\) が存在すると仮定し、
-        \\(W h_{\ell,i}^{(\theta)}\\) を \\(h_{\ell,i}^{(0)}\\) にできるだけ近づけるように学習します。
+        線形写像 \(W\) が存在すると仮定し、
+        \(W h_{\ell,i}^{(\theta)}\) を \(h_{\ell,i}^{(0)}\) にできるだけ近づけるように学習します。
       </p>
 
       <p>
         そのときの REPINA 損失は、典型的には次のように書けます:
       </p>
       <p class="math-note">
-        \\[
-          \\mathcal{L}_{\\mathrm{REPINA}}
-          = \\frac{1}{N}
-            \\sum_{i=1}^{N}
-              \\left\\lVert
-                W h_{\\ell,i}^{(\\theta)} - h_{\\ell,i}^{(0)}
-              \\right\\rVert_2^2
-        \\]
-        ここで \\(N\\) はその層で見ているトークン数、
-        \\(\\lVert \\cdot \\rVert_2\\) は L2 ノルムです。
+        \[
+          \mathcal{L}_{\mathrm{REPINA}}
+          = \frac{1}{N}
+            \sum_{i=1}^{N}
+              \left\lVert
+                W h_{\ell,i}^{(\theta)} - h_{\ell,i}^{(0)}
+              \right\rVert_2^2
+        \]
       </p>
 
       <h4>本実装での REPINA<sup>I</sup>（恒等射影）</h4>
       <p>
-        TRepLiNa コードでは、よりシンプルな
+        TRepLiNa の実装では、よりシンプルな
         <strong>REPINA<sup>I</sup>（identity projection 版）</strong>
-        を採用しており、\\(W = I\\)（恒等行列）とみなしています。このとき損失は
+        を採用しており、\(W = I\)（恒等行列）とみなしています。このとき損失は
       </p>
       <p class="math-note">
-        \\[
-          \\mathcal{L}_{\\mathrm{REPINA}^{I}}
-          = \\frac{1}{N}
-            \\sum_{i=1}^{N}
-              \\left\\lVert
-                h_{\\ell,i}^{(\\theta)} - h_{\\ell,i}^{(0)}
-              \\right\\rVert_2^2
-        \\]
+        \[
+          \mathcal{L}_{\mathrm{REPINA}^{I}}
+          = \frac{1}{N}
+            \sum_{i=1}^{N}
+              \left\lVert
+                h_{\ell,i}^{(\theta)} - h_{\ell,i}^{(0)}
+              \right\rVert_2^2
+        \]
       </p>
       <p>
         つまり「<strong>LoRA などで微調整して得られた表現</strong>」と
@@ -238,40 +244,40 @@
       <h4>線形 CKA の定義</h4>
       <p>
         ある層のトークン表現をまとめた行列を
-        \\(X \\in \\mathbb{R}^{N \\times D}\\),
-        \\(Y \\in \\mathbb{R}^{N \\times D}\\) とします（ここで \\(N\\) はトークン数、\\(D\\) は隠れ次元）。
+        \(X \in \mathbb{R}^{N \times D}\),
+        \(Y \in \mathbb{R}^{N \times D}\) とします（ここで \(N\) はトークン数、\(D\) は隠れ次元）。
         行方向（サンプル方向）で平均を引いて中心化したものを
-        \\(\\tilde{X}, \\tilde{Y}\\) とすると、
+        \(\tilde{X}, \tilde{Y}\) とすると、
       </p>
       <p class="math-note">
-        \\[
-          \\mathrm{CKA}(X, Y)
+        \[
+          \mathrm{CKA}(X, Y)
           =
-          \\frac{
-            \\left\\lVert \\tilde{X}^\\top \\tilde{Y} \\right\\rVert_F^2
+          \frac{
+            \left\lVert \tilde{X}^\top \tilde{Y} \right\rVert_F^2
           }{
-            \\left\\lVert \\tilde{X}^\\top \\tilde{X} \\right\\rVert_F
-            \\cdot
-            \\left\\lVert \\tilde{Y}^\\top \\tilde{Y} \\right\\rVert_F
+            \left\lVert \tilde{X}^\top \tilde{X} \right\rVert_F
+            \cdot
+            \left\lVert \tilde{Y}^\top \tilde{Y} \right\rVert_F
           }
-        \\]
+        \]
       </p>
       <p>
-        ここで \\(\\lVert \\cdot \\rVert_F\\) はフロベニウスノルムです。
-        値は \\(0 \\leq \\mathrm{CKA} \\leq 1\\) に正規化されており、
+        ここで \(\lVert \cdot \rVert_F\) はフロベニウスノルムです。
+        値は \(0 \leq \mathrm{CKA} \leq 1\) に正規化されており、
         <strong>1 に近いほど 2 つの表現空間が似ている</strong>ことを意味します。
       </p>
 
       <p>
-        TRepLiNa では、低資源言語側の表現行列を \\(X\\)、
-        高資源言語（ピボット言語）側の表現行列を \\(Y\\) として CKA を計算し、
+        TRepLiNa では、低資源言語側の表現行列を \(X\)、
+        高資源言語（ピボット言語）側の表現行列を \(Y\) として CKA を計算し、
         <strong>「2 言語の表現が似てほしい」</strong> ので
-        \\(1 - \\mathrm{CKA}(X,Y)\\) を損失として最小化します。
+        \(1 - \mathrm{CKA}(X,Y)\) を損失として最小化します。
       </p>
       <p class="math-note">
-        \\[
-          \\mathcal{L}_{\\mathrm{CKA}} = 1 - \\mathrm{CKA}(X, Y)
-        \\]
+        \[
+          \mathcal{L}_{\mathrm{CKA}} = 1 - \mathrm{CKA}(X, Y)
+        \]
       </p>
     </section>
 
@@ -290,10 +296,6 @@
 
       <!-- CKA 実装 -->
       <h3>1. CKA の実装部分</h3>
-      <p>
-        線形 CKA は、まず行方向に中心化する <code>center_rows</code> 関数と、
-        実際に CKA 値を計算する <code>linear_cka</code> 関数として定義されています。
-      </p>
 
       <pre><code>def center_rows(x: torch.Tensor, mask: Optional[torch.Tensor] = None) -&gt; torch.Tensor:
     """
@@ -350,30 +352,8 @@ def linear_cka(x: torch.Tensor, y: torch.Tensor,
             torch.sqrt((yty * yty).sum().clamp(min=eps))
     return (num / denom).clamp(min=0.0, max=1.0)</code></pre>
 
-      <p>
-        ここでやっていることは、数式で説明した線形 CKA とほぼそのまま一致しており、
-        中心化された行列 \\(\\tilde{X}, \\tilde{Y}\\) から
-        \\(\\tilde{X}^\\top \\tilde{Y}\\), \\(\\tilde{X}^\\top \\tilde{X}\\), \\(\\tilde{Y}^\\top \\tilde{Y}\\)
-        を計算し、フロベニウスノルムにより正規化しています。
-      </p>
-
-      <p>
-        学習時には、低資源言語側表現 <code>a_src</code> と
-        高資源言語側表現 <code>b_src</code> に対して CKA を適用し、
-        損失として
-        <code>cka_loss = 1.0 - cka_val</code> を用いています。
-      </p>
-
-      <pre><code># a_src, b_src は &quot;source tokens の表現&quot; を並べた (N, D) テンソル
-cka_val = linear_cka(a_src, b_src, None, None)
-cka_loss = 1.0 - cka_val</code></pre>
-
       <!-- REPINA 実装 -->
       <h3>2. REPINA<sup>I</sup> の実装部分</h3>
-      <p>
-        REPINA<sup>I</sup> は、<code>compute_losses</code> 関数内で
-        「アダプタを無効化したベースモデル」との表現距離として実装されています。
-      </p>
 
       <pre><code># 3) REPINA^I (identity projection): L2 between base (adapters disabled)
 # and current reps, same inputs as a_align
@@ -393,37 +373,8 @@ if do_repina:
 
     repina_loss = torch.mean((rep_cur - rep_pre) ** 2)</code></pre>
 
-      <p>
-        処理の流れは次の通りです。
-      </p>
-      <ol>
-        <li>現在の LoRA 付きモデル（微調整中）で、低資源言語側の入力 <code>a_ids</code> を通し、
-          層 <code>layer_index</code> の表現 <code>a_reps_all</code> を取得。</li>
-        <li><code>model.disable_adapter()</code> を用いてアダプタを無効化し、
-          同じ入力 <code>a_ids</code> をベースモデルとして再度前向き計算し、
-          <code>base_reps_all</code> を取得。</li>
-        <li><code>a_src_keep</code> によってソーストークン部分を抽出し、
-          <code>rep_cur</code>（微調整後）と <code>rep_pre</code>（ベース）を対応づける。</li>
-        <li>両者の L2 距離の平均を <code>repina_loss</code> として計算。</li>
-      </ol>
-
-      <p>
-        数式で書けば、REPINA<sup>I</sup> 損失は先ほど示した
-        \\(\\mathcal{L}_{\\mathrm{REPINA}^{I}}\\) に対応しており、
-        実装ではその平均を PyTorch のテンソルとして計算しています。
-      </p>
-
       <!-- 全体損失 -->
       <h3>3. 全体の損失関数</h3>
-      <p>
-        全体の損失は <code>compute_losses</code> 関数の中で定義されています。
-        ここでは、以下の 3 つの項から構成されます。
-      </p>
-      <ul>
-        <li><strong>タスク損失</strong>（ラベルスムージング付き NLL）</li>
-        <li><strong>CKA 損失</strong>（言語間アライメント）</li>
-        <li><strong>REPINA<sup>I</sup> 損失</strong>（表現ドリフト抑制、一定ステップごと）</li>
-      </ul>
 
       <pre><code>def compute_losses(
     model,
@@ -442,8 +393,8 @@ if do_repina:
     repina_loss = torch.tensor(0.0, device=device)
 
     # 1) Task loss: LM on prompt+target (labels already mask prompt with -100)
-    input_ids = batch[&quot;input_ids&quot;].to(device)
-    labels    = batch[&quot;labels&quot;].to(device)
+    input_ids = batch["input_ids"].to(device)
+    labels    = batch["labels"].to(device)
     attention_mask = (input_ids != tokenizer.pad_token_id).to(device)
 
     outputs = model(
@@ -453,16 +404,13 @@ if do_repina:
         use_cache=False,
         output_hidden_states=True
     )
-    #task_loss = outputs.loss
     task_loss = compute_task_loss_with_label_smoothing(
         outputs, labels, epsilon=0.1, ignore_index=-100
     )
 
     # 2) Alignment loss (CKA) on source regions of A and B
-    a_ids = batch[&quot;a_align_ids&quot;].to(device)
-    b_ids = batch[&quot;b_align_ids&quot;].to(device)
-    a_mask = batch[&quot;a_align_mask&quot;].to(device)
-    b_mask = batch[&quot;b_align_mask&quot;].to(device)
+    a_ids = batch["a_align_ids"].to(device)
+    b_ids = batch["b_align_ids"].to(device)
 
     a_attn = (a_ids != tokenizer.pad_token_id).to(device)
     b_attn = (b_ids != tokenizer.pad_token_id).to(device)
@@ -479,19 +427,16 @@ if do_repina:
     a_src = a_reps_all[a_src_keep]
     b_src = b_reps_all[b_src_keep]
 
-    # Edge case: if no tokens (shouldn't happen), fall back to all non-pad tokens
     if a_src.numel() == 0:
         a_src = a_reps_all[a_tokmask_all]
     if b_src.numel() == 0:
         b_src = b_reps_all[b_tokmask_all]
 
-    # Now compute CKA on the (N,D) matrices.
     cka_val = linear_cka(a_src, b_src, None, None)
     cka_loss = 1.0 - cka_val
 
-    # 3) REPINA^I (identity projection): L2 between base (adapters disabled)
-    # and current reps, same inputs as a_align
-    do_repina = ((global_step + 1) % 2 == 0)  # every 2 steps
+    # 3) REPINA^I
+    do_repina = ((global_step + 1) % 2 == 0)
     if do_repina:
         with torch.no_grad():
             with model.disable_adapter():
@@ -511,38 +456,26 @@ if do_repina:
         total = task_loss + lambda_cka * cka_loss
 
     return total, {
-        &quot;task_loss&quot;: task_loss.detach().float().item(),
-        &quot;cka&quot;: cka_val.detach().float().item(),
-        &quot;cka_loss&quot;: cka_loss.detach().float().item(),
-        &quot;repina&quot;: repina_loss.detach().float().item(),
-        &quot;total&quot;: total.detach().float().item()
+        "task_loss": task_loss.detach().float().item(),
+        "cka": cka_val.detach().float().item(),
+        "cka_loss": cka_loss.detach().float().item(),
+        "repina": repina_loss.detach().float().item(),
+        "total": total.detach().float().item()
     }</code></pre>
 
       <h4>数式でのまとめ</h4>
       <p class="math-note">
-        タスク損失を \\(\\mathcal{L}_{\\mathrm{task}}\\)、CKA 損失を
-        \\(\\mathcal{L}_{\\mathrm{CKA}} = 1 - \\mathrm{CKA}(X,Y)\\)、REPINA<sup>I</sup> 損失を
-        \\(\\mathcal{L}_{\\mathrm{REPINA}^{I}}\\) とすると、全体の損失は
-        \\[
-          \\mathcal{L}_{\\mathrm{total}}
+        タスク損失を \(\mathcal{L}_{\mathrm{task}}\)、CKA 損失を
+        \(\mathcal{L}_{\mathrm{CKA}} = 1 - \mathrm{CKA}(X,Y)\)、REPINA<sup>I</sup> 損失を
+        \(\mathcal{L}_{\mathrm{REPINA}^{I}}\) とすると、全体の損失は
+        \[
+          \mathcal{L}_{\mathrm{total}}
           =
-          \\mathcal{L}_{\\mathrm{task}}
-          + \\lambda_{\\mathrm{CKA}} \\cdot \\mathcal{L}_{\\mathrm{CKA}}
-          + \\mu_{\\mathrm{REPINA}} \\cdot \\mathcal{L}_{\\mathrm{REPINA}^{I}}
-        \\]
+          \mathcal{L}_{\mathrm{task}}
+          + \lambda_{\mathrm{CKA}} \cdot \mathcal{L}_{\mathrm{CKA}}
+          + \mu_{\mathrm{REPINA}} \cdot \mathcal{L}_{\mathrm{REPINA}^{I}}
+        \]
         となります（実装では REPINA 部分は一定ステップごとにのみ加算）。
-      </p>
-
-      <p>
-        直感的には、
-      </p>
-      <ul>
-        <li>\\(\\mathcal{L}_{\\mathrm{task}}\\): 翻訳として正しい出力を出すように学習させる</li>
-        <li>\\(\\mathcal{L}_{\\mathrm{CKA}}\\): 低資源言語と高資源言語の表現空間の構造を揃える</li>
-        <li>\\(\\mathcal{L}_{\\mathrm{REPINA}^{I}}\\): ベースモデルが持つ汎用的な能力から逸脱しすぎないようにする</li>
-      </ul>
-      <p>
-        という 3 つの力が同時に働くように設計されています。
       </p>
     </section>
   </main>
